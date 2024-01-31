@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Web App - AI Chatbot</title>
+    <style>
+        /* Existing styles ... */
+
+        h1 {
+            text-align: center; /* Centers the text */
+            padding: 20px 0; /* Adds padding above and below the title */
+            margin: 0; /* Removes the default margin to allow better control */
+            font-size: 2em; /* Adjusts the font size */
+            color: #333; /* Sets the color, change as needed */
+            /* Feel free to add additional styling as needed */
+        }
+
+        /* Chatbot Interface Styles */
+        .chat-container {
+            width: 80%;
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .chat-display {
+            height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #eaeaea;
+            border-bottom: 1px solid #ddd;
+            font-family: Arial, sans-serif;
+        }
+
+        .message-content {
+            padding: 8px 12px;
+            display: block;
+            max-width: 80%; /* Prevents the text from stretching too far */
+            word-wrap: break-word; /* Ensures long words don't overflow */
+            margin-top: 24px; /* Adjusted to accommodate the padded sender's name */
+        }
+
+        .chat-message {
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            background-color: #f4f4f4;
+            border: 1px solid #ccc;
+            text-align: left; /* Align all messages to the left */
+            position: relative;
+        }
+
+        .message-sender {
+            font-weight: bold; /* Bold the sender's name */
+            position: absolute;
+            padding: 4px 8px; /* Adding padding around the sender's name */
+            top: 0;
+            left: 12px; /* Aligns the sender's name to the left with some padding */
+        }
+
+        .user-message {
+            text-align: left;
+            background-color: #d9edf7;
+        }
+
+        .ai-message {
+            text-align: left;
+            background-color: #dff0d8;
+        }
+
+        .chat-input {
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input[type="text"] {
+            width: calc(100% - 120px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .chat-input button {
+            width: 100px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #5C6BC0;
+            color: white;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background-color: #3F51B5;
+        }
+
+            .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s ease infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Existing layout ... -->
+
+    <!-- Chatbot Interface -->
+    <div class="chat-container">
+        <h1>AI Chatbot</h1>
+        <div class="chat-display" id="chatDisplay">
+            <!-- Messages will be displayed here -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- JavaScript (Placeholder for now) -->
+    <script>
+         function sendMessage() {
+            var userInputField = document.getElementById("userInput");
+            var sendButton = document.querySelector(".chat-input button");
+
+            var userInput = userInputField.value;
+
+            if (userInput.trim() !== "") {
+                addMessageToChat("User", userInput);
+                userInputField.value = "";
+
+                // Disable input and button
+                userInputField.disabled = true;
+                sendButton.disabled = true;
+
+                 // Add loading spinner
+                addSpinner();
+
+                var aiResponse = simulateAIResponse(userInput);
+                setTimeout(() => {
+                    removeSpinner();
+                    addMessageToChat("AI Chatbot", aiResponse);
+
+                    // Re-enable input and button
+                    userInputField.disabled = false;
+                    sendButton.disabled = false;
+                    userInputField.focus(); // Set focus back to the input field
+                }, 1000); // Simulate AI response time
+            }
+        }
+
+        function handleKeyPress(event) {
+            // Check if the Enter key is pressed
+            if (event.key === "Enter") {
+                event.preventDefault(); // Prevent the default action to avoid line breaks in input
+                sendMessage();
+            }
+        }
+    
+        function addMessageToChat(sender, message) {
+            // Get the chat display element where all messages are shown
+            var chatDisplay = document.getElementById("chatDisplay");
+
+            // Create a new div element that will represent a single message
+            var newMessage = document.createElement("div");
+            // Use 'user-message' class if sender is 'User', otherwise use 'ai-message' for AI Chatbot
+            newMessage.classList.add("chat-message", sender === "User" ? "user-message" : "ai-message");
+
+            // Create a span element for the sender's name (either 'User' or 'AI Chatbot')
+            var senderName = document.createElement("span");
+            // Add a CSS class to style the sender's name, like making it bold
+            senderName.classList.add("message-sender");
+            // Set the text of the senderName span to be the sender's name plus a colon
+            senderName.innerText = sender + ": ";
+
+            var messageContent = document.createElement("div");
+            messageContent.classList.add("message-content");
+            messageContent.innerText = message;
+            
+            // Append the sender's name span to the new message div
+            newMessage.appendChild(senderName);
+            // Append the actual text message as a text node to the new message div
+            newMessage.appendChild(messageContent);
+            // newMessage.appendChild(document.createTextNode(message));
+            
+            // Add the fully constructed new message div to the chat display
+            chatDisplay.appendChild(newMessage);
+            // Automatically scroll the chat display to the bottom to show the latest message
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+        }
+
+    
+        function simulateAIResponse(userInput) {
+            // This is a placeholder for AI responses
+            // You can later integrate actual AI logic here
+            return "Hello, I am an AI Chatbot, how can I assist you today?";
+        }
+
+        function addSpinner() {
+            var chatDisplay = document.getElementById("chatDisplay");
+            var spinner = document.createElement("div");
+            spinner.classList.add("spinner");
+            chatDisplay.appendChild(spinner);
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+        }
+
+        function removeSpinner() {
+                var spinner = document.querySelector(".spinner");
+                if (spinner) {
+                    spinner.remove();
+                }
+            }
+
+        
+    </script>
+    
+    
+</body>
+</html>
